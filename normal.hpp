@@ -43,7 +43,9 @@ class LSHADE{
         d2d Archieve;
         d2d H_Table;
         d1d Objective_Rank_INDEX;
-    
+
+        int Archieve_Coef;
+        int H_Table_Coef;
     
     private:
     void INI(int ITER,int POP,int DIM,int A,int H)
@@ -57,7 +59,8 @@ class LSHADE{
         Archieve.clear();
         Archieve.swap(Archieve);
         
-      
+        Archieve_Coef = 0;
+        H_Table_Coef = 0;
 
         H_Table.clear();
         H_Table.swap(H_Table);
@@ -80,19 +83,7 @@ class LSHADE{
         }
     }
 
-    void Mutation()
-    {
-        d2d S_Table;
-        for(int i=0;i<Particle.size();i++)
-        {
-            int r = rand() % (H_Table.size() - 0 + 1) + 0;
-            double CR = Normal_Distribution(i,r);
-            double F = Cauchy_Distribution(i,r);
-
-        }
-        
-
-    }
+   
     void Particle_INI(int DIM)
     {
         for(int i=0;i<Particle.size();i++)
@@ -148,6 +139,111 @@ class LSHADE{
     {
       pairsort(Objective_Value,Objective_Rank_INDEX); 
     }
+
+    void Mutation_Selection(int pbest,int A)
+    {
+        d2d S_Table;
+        for(int i=0;i<Particle.size();i++)
+        {
+            int r = rand() % (H_Table.size() - 0 + 1) + 0;
+            double CR = Normal_Distribution(i,r);
+            double F = Cauchy_Distribution(i,r);
+            d1d V(Particle[i].size());
+            for(int j=0;j<Particle[i].size();j++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (1.0 - 0.0)) + 0.0;
+                if (a < CR)
+                    V[j] = Mutation( pbest, CR, F,i,j);
+                else 
+                    V[j] = Particle[i][j];
+            }
+            double V_Objective_Value = Function_Evaluate(V.size(),V);
+            if( V_Objective_Value < Objective_Value[i])
+            {
+                S_Table.push_back({CR,F,Objective_Value[i] - V_Objective_Value});
+                
+            
+                
+
+                Particle[i].assign(V.begin(), V.end());
+                
+                Objective_Value[i] = V_Objective_Value;
+
+                if(Archieve_Coef == A)///這邊要改成random pop
+                {
+                    Archieve_Coef = 0;
+                }
+                
+                Archieve[Archieve_Coef].assign(V.begin(),V.end());
+                Archieve_Coef ++;
+            }
+        }
+        
+
+    }
+
+    double Mutation(int pbest,double CR,double F,int Pop,int Dim)
+    {
+        int X_P_best = Current_To_Pbest(pbest);
+
+        int r1 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+        while( r1 == Pop)
+        {
+            r1 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+        }
+        
+        int r2 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+        while (r2 ==r1 || r2 == Pop)
+        {
+            r2 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+        }
+        
+        double V = Particle[Pop][Dim] + F * (Particle[X_P_best][Dim] - Particle[Pop][Dim]) + F *(Particle[r1][Dim] - Particle[r2][Dim]); 
+        return V;
+    }
+    int  Current_To_Pbest(int pbest)
+    {
+        int r = rand() % ( (pbest-1) - 0 + 1) + 0;
+        return Objective_Rank_INDEX[r] ;
+    }
+
+    void Update_Htable(int H,d2d S_table)//next cccccode 
+    {
+        double S_CR_SUM = 0;
+        double S_F_SUM = 0;
+        double S_FIT_SUM = 0;
+        for(int i=0;i<S_table.size();i++)
+        {
+            S_CR_SUM += S_table[i][0];
+            S_F_SUM += S_table[i][1];
+            S_FIT_SUM += S_table[i][2];
+        }
+        double s1 = 0;
+        double s2 = 0;
+        double f1 = 0;
+        double f2 = 0;
+
+        for(int i=0;i<S_table.size();i++)
+        {
+            s1 += (S_table[i][2]/S_FIT_SUM)*pow(S_table[i][0],2);
+            s2 += (S_table[i][2]/S_FIT_SUM)* S_table[i][0];
+
+            f1 += (S_table[i][2]/S_FIT_SUM)*pow(S_table[i][1],2);
+            f2 += (S_table[i][2]/S_FIT_SUM)* S_table[i][1];
+        }
+
+        if(H_Table_Coef == H)
+            H_Table_Coef = 0;
+
+        H_Table[H_Table_Coef][0] = s1/s2;
+
+        H_Table[H_Table_Coef][1] = f1/f2; 
+        
+        H_Table_Coef++;
+
+    }
+
+
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
     {
         double max = 40.0;
@@ -176,4 +272,9 @@ class LSHADE{
         double F = -20*(exp((-0.2)*sqrt(sum1/DIM)))-exp(sum2/DIM)+20+exp(1);
         return F;
     }
+    double Function_Evaluate(int DIM,d1d arr)
+    {
+        return ACKLEY_OBJECTIVE_VALUE( DIM, arr);
+    }
+
 };
