@@ -72,6 +72,7 @@ class LSHADE{
 
         int Archieve_Coef;
         int H_Table_Coef;
+        // int NOW_POP;
         double Current_Best;
     
     private:
@@ -110,6 +111,7 @@ class LSHADE{
         }
 
         Current_Best  = DBL_MAX;
+        // NOW_POP = POP;
     }
 
    
@@ -325,10 +327,25 @@ class LSHADE{
         double F = ACKLEY_OBJECTIVE_VALUE(DIM,Particle[index]);
         Objective_Value[index] = F;
     }
-    void Linear_Reduction()
-    {
-        
-    }
+    // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
+    // {
+    //     int MAX_NFE = ITER;
+    //     int NFE = iteration;
+    //     int nmin = 5;
+    //     int ninit = NOW_POP;
+
+    //     int new_pop = (nmin - ninit)/MAX_NFE*NFE + ninit;
+
+    //     if (new_pop < NOW_POP)
+    //     {
+    //         int DELETE = NOW_POP - new_pop;
+    //         for(int i=0;i<DELETE;i++)
+    //         {
+
+    //         }
+
+    //     }
+    // }
     double ACKLEY_OBJECTIVE_VALUE(int DIM,d1d arr) //Calculate the objective value at ACKLEY Function 
     {
         double sum1= 0;
