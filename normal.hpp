@@ -325,6 +325,10 @@ class LSHADE{
         double F = ACKLEY_OBJECTIVE_VALUE(DIM,Particle[index]);
         Objective_Value[index] = F;
     }
+    void Linear_Reduction()
+    {
+        
+    }
     double ACKLEY_OBJECTIVE_VALUE(int DIM,d1d arr) //Calculate the objective value at ACKLEY Function 
     {
         double sum1= 0;
