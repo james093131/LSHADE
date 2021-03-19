@@ -13,13 +13,13 @@ int main(int argc,const char *argv[])
     if( argc > 1 )
     {
         LSHADE lshade;
-        lshade.RUN( iteration,pop, DIM, A, H, pbest);
+        lshade.RUN( run,iteration,pop, DIM, A, H, pbest);
     }
       
     else 
     {
         LSHADE lshade;
-        lshade.RUN(1000,30,50,30,10,4);
+        lshade.RUN(1,2000,100,50,100,100,4);
 
     }
    

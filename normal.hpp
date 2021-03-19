@@ -31,25 +31,37 @@ typedef vector<d3d> d4d;
 
 
 class LSHADE{
+    public :
+        d1d Run_Result;
     public:
-        void RUN(int ITER,int POP,int DIM,int A,int H,int pbest)
+        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest)
         {
+
+            Run_Result.resize(RUN);
+            int r = 0;
             srand( time(NULL) );
-            INI(ITER,POP,DIM,A,H);
-                        cout<<"1"<<endl;
+            double START = clock();
 
-            Particle_INI(DIM);
-                        cout<<"2"<<endl;
-
-            int iteration = 0;
-            while(iteration < ITER)
+            while(r<RUN)
             {
-                RANK();
-                Mutation_Selection(pbest,A,H,iteration);
+                srand( time(NULL) );
+                INI(ITER,POP,DIM,A,H);
 
-                iteration ++;
+                Particle_INI(DIM);
+
+                int iteration = 0;
+                while(iteration < ITER)
+                {
+                    RANK();
+                    Mutation_Selection(pbest,A,H,iteration);
+
+                    iteration ++;
+                }
+                Run_Result[r] = Current_Best;
+                r++;
             }
-           
+            double END = clock();
+            OUT( RUN, ITER,DIM,START,END);
         }
     private:
         d2d Particle;
@@ -136,14 +148,13 @@ class LSHADE{
     }
     double Normal_Distribution(double mean)
     {
-         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine g1 (seed);            
         std::normal_distribution<double> distribution (mean,0.1);
         return distribution(g1);
     }
     double Cauchy_Distribution(double mean)
     {
-        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine g2;
         std::cauchy_distribution<double> distribution(mean,0.1);
         return distribution(g2);
@@ -332,5 +343,23 @@ class LSHADE{
     {
         return ACKLEY_OBJECTIVE_VALUE( DIM, arr);
     }
-
+    void OUT(int run ,int iteration,int dim,double START,double END)
+    {
+        double BEST = Run_Result[0];
+        double AVG = 0;
+        for(int i=0;i<Run_Result.size();i++)
+        {   
+            AVG += Run_Result[i];
+            if (Run_Result[i] < BEST)
+                BEST = Run_Result[i];
+        }
+        AVG = AVG /run;
+        cout<<"# Testing Function : "<<"ACKLEY"<<endl;
+        cout<<"# Run : "<<run<<endl;
+        cout<<"# Iteration :"<<iteration<<endl;
+        cout<<"# DIM  "<<dim<<endl;
+        cout<<"# Best Objective Value "<<BEST<<endl;
+        cout<<"# Average Objective Value "<<AVG<<endl;
+        cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
+    }
 };
