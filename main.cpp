@@ -19,7 +19,7 @@ int main(int argc,const char *argv[])
     else 
     {
         LSHADE lshade;
-        lshade.RUN(1000,30,100,30,10,4);
+        lshade.RUN(1000,30,50,30,10,4);
 
     }
    

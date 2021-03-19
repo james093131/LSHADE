@@ -10,6 +10,9 @@
 #include<math.h>
 #include<float.h>
 #include <sys/stat.h>
+#include <random>
+#include <chrono>
+
 
 using namespace std;
 
@@ -33,8 +36,19 @@ class LSHADE{
         {
             srand( time(NULL) );
             INI(ITER,POP,DIM,A,H);
+                        cout<<"1"<<endl;
+
             Particle_INI(DIM);
-            RANK();
+                        cout<<"2"<<endl;
+
+            int iteration = 0;
+            while(iteration < ITER)
+            {
+                RANK();
+                Mutation_Selection(pbest,A,H,iteration);
+
+                iteration ++;
+            }
            
         }
     private:
@@ -46,6 +60,7 @@ class LSHADE{
 
         int Archieve_Coef;
         int H_Table_Coef;
+        double Current_Best;
     
     private:
     void INI(int ITER,int POP,int DIM,int A,int H)
@@ -81,6 +96,8 @@ class LSHADE{
         {
             Objective_Rank_INDEX[i] = i;
         }
+
+        Current_Best  = DBL_MAX;
     }
 
    
@@ -90,28 +107,6 @@ class LSHADE{
         {
             ACKLEY(DIM,i);
         }
-    }
-    double Normal_Distribution(int i ,int r)//公式待確認
-    {
-        double z = (5 - -5) * rand() / (RAND_MAX + 1.0) + -5;
-        double x = H_Table[r][i]+z*0.1;
-        if (x > 1)
-            x = 1 ;
-        else if (x < 0)
-            x = 0;
-
-
-        return x;
-    }
-    double Cauchy_Distribution(int i ,int r)//公式待確認
-    {
-        double z = (5 - -5) * rand() / (RAND_MAX + 1.0) + -5;
-        double x = H_Table[r][i]+z*0.1;
-        if (x > 1)
-            x = 1 ;
-        else if (x < 0)
-            x = 0;
-        return x;       
     }
     void pairsort(d1d a, d1d &b) 
     { 
@@ -139,46 +134,52 @@ class LSHADE{
     {
       pairsort(Objective_Value,Objective_Rank_INDEX); 
     }
-
-    void Mutation_Selection(int pbest,int A)
+    double Normal_Distribution(double mean)
+    {
+         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::default_random_engine g1 (seed);            
+        std::normal_distribution<double> distribution (mean,0.1);
+        return distribution(g1);
+    }
+    double Cauchy_Distribution(double mean)
+    {
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::default_random_engine g2;
+        std::cauchy_distribution<double> distribution(mean,0.1);
+        return distribution(g2);
+    }
+    void Mutation_Selection(int pbest,int A,int H,int iter)
     {
         d2d S_Table;
+        d2d V(Particle.size(),d1d(Particle[0].size()));
+        d1d CR_Table(Particle.size());
+        d1d F_Table(Particle.size());
+
         for(int i=0;i<Particle.size();i++)
         {
-            int r = rand() % (H_Table.size() - 0 + 1) + 0;
-            double CR = Normal_Distribution(i,r);
-            double F = Cauchy_Distribution(i,r);
-            d1d V(Particle[i].size());
+            int r = rand() % ((H_Table.size()-1) - 0 + 1) + 0;
+
+            double CR = Normal_Distribution(H_Table[r][0]);
+            double F = Cauchy_Distribution(H_Table[r][1]);
+            CR_Table[i]  = CR;
+            F_Table[i] = F;
+
             for(int j=0;j<Particle[i].size();j++)
             {
                 double a = ((float(rand()) / float(RAND_MAX)) * (1.0 - 0.0)) + 0.0;
                 if (a < CR)
-                    V[j] = Mutation( pbest, CR, F,i,j);
-                else 
-                    V[j] = Particle[i][j];
-            }
-            double V_Objective_Value = Function_Evaluate(V.size(),V);
-            if( V_Objective_Value < Objective_Value[i])
-            {
-                S_Table.push_back({CR,F,Objective_Value[i] - V_Objective_Value});
-                
-            
-                
-
-                Particle[i].assign(V.begin(), V.end());
-                
-                Objective_Value[i] = V_Objective_Value;
-
-                if(Archieve_Coef == A)///這邊要改成random pop
                 {
-                    Archieve_Coef = 0;
+                    V[i][j] = Mutation( pbest, CR, F,i,j);
                 }
-                
-                Archieve[Archieve_Coef].assign(V.begin(),V.end());
-                Archieve_Coef ++;
+                  
+                else 
+                {
+                    V[i][j] = Particle[i][j];
+                }
             }
+            
         }
-        
+        Evaluation(V,CR_Table,F_Table,A,H,iter);
 
     }
 
@@ -192,13 +193,26 @@ class LSHADE{
             r1 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
         }
         
-        int r2 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+        
+        double  r2_bar ;
+        int r2 = rand() % ( (Objective_Value.size() -1 + Archieve_Coef) - 0 + 1) + 0;
+       
         while (r2 ==r1 || r2 == Pop)
         {
-            r2 = rand() % ( (Objective_Value.size() -1) - 0 + 1) + 0;
+            r2 = rand() % ( (Objective_Value.size() -1 + Archieve_Coef) - 0 + 1) + 0;
         }
         
-        double V = Particle[Pop][Dim] + F * (Particle[X_P_best][Dim] - Particle[Pop][Dim]) + F *(Particle[r1][Dim] - Particle[r2][Dim]); 
+        if(r2 < Objective_Value.size())
+        {
+            r2_bar =  Particle[r2][Dim];
+        }
+        else{
+            r2_bar = Archieve[r2-Objective_Value.size()][Dim];
+        }
+    
+        
+        
+        double V = Particle[Pop][Dim] + F * (Particle[X_P_best][Dim] - Particle[Pop][Dim]) + F *(Particle[r1][Dim] - r2_bar); 
         return V;
     }
     int  Current_To_Pbest(int pbest)
@@ -238,11 +252,53 @@ class LSHADE{
         H_Table[H_Table_Coef][0] = s1/s2;
 
         H_Table[H_Table_Coef][1] = f1/f2; 
-        
+
         H_Table_Coef++;
 
     }
 
+    void Evaluation(d2d V,d1d CR,d1d F,int A,int H,int iter)
+    {
+        d2d S_Table;
+        for(int i=0;i<V.size();i++)
+        {
+            double V_Objective_Value = Function_Evaluate(V[i].size(),V[i]);
+            if( V_Objective_Value < Objective_Value[i])
+            {
+                d1d X;
+                X.push_back(CR[i]);
+                X.push_back(F[i]);
+                X.push_back(Objective_Value[i] - V_Objective_Value);
+                S_Table.push_back(X);
+                
+            
+                Particle[i].assign(V[i].begin(), V[i].end());
+                
+                Objective_Value[i] = V_Objective_Value;
+
+                if(Current_Best > Objective_Value[i])
+                {
+                    Current_Best = Objective_Value[i];
+                }
+
+                if(Archieve_Coef == A)///這邊要改成random pop
+                {
+                    int r = rand() % ( (Archieve.size() -1) - 0 + 1) + 0;
+                    Archieve[r].assign(V[i].begin(), V[i].end());
+
+                }
+                else{
+                    Archieve[Archieve_Coef].assign(V[i].begin(), V[i].end());
+                    Archieve_Coef ++;
+                }
+               
+            }
+
+        }
+    
+        Update_Htable(H,S_Table);
+        cout<<iter<<' '<<Current_Best<<endl;
+    }
 
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
     {
