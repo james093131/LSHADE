@@ -33,11 +33,13 @@ typedef vector<d3d> d4d;
 class LSHADE{
     public :
         d1d Run_Result;
+        d1d Run_Iteration_Result;
     public:
         void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest)
         {
 
             Run_Result.resize(RUN);
+            Run_Iteration_Result.resize(ITER,0);
             int r = 0;
             srand( time(NULL) );
             double START = clock();
@@ -310,7 +312,8 @@ class LSHADE{
         }
     
         Update_Htable(H,S_Table);
-        cout<<iter<<' '<<Current_Best<<endl;
+        Run_Iteration_Result[iter] += Current_Best;
+        cout<<"# "<<iter<<' '<<Current_Best<<endl;
     }
 
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
@@ -375,6 +378,10 @@ class LSHADE{
                 BEST = Run_Result[i];
         }
         AVG = AVG /run;
+        for(int i=0;i<iteration;i++)
+        {
+            cout<<i+1<<' '<<Run_Iteration_Result[i]/run <<endl;
+        }
         cout<<"# Testing Function : "<<"ACKLEY"<<endl;
         cout<<"# Run : "<<run<<endl;
         cout<<"# Iteration :"<<iteration<<endl;
