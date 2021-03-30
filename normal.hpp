@@ -14,6 +14,7 @@
 #include <chrono>
 
 
+
 using namespace std;
 
 typedef vector<char> c1d;
@@ -34,8 +35,10 @@ class LSHADE{
     public :
         d1d Run_Result;
         d1d Run_Iteration_Result;
+        double max;
+        double min;
     public:
-        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest)
+        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest,const char *F)
         {
 
             Run_Result.resize(RUN);
@@ -49,13 +52,13 @@ class LSHADE{
                 srand( time(NULL) );
                 INI(ITER,POP,DIM,A,H);
 
-                Particle_INI(DIM);
+                Particle_INI(DIM,F);
 
                 int iteration = 0;
                 while(iteration < ITER)
                 {
                     RANK();
-                    Mutation_Selection(pbest,A,H,iteration);
+                    Mutation_Selection(pbest,A,H,iteration,F);
 
                     iteration ++;
                 }
@@ -117,12 +120,44 @@ class LSHADE{
     }
 
    
-    void Particle_INI(int DIM)
+    void Particle_INI(int DIM,const char*F)
     {
-        for(int i=0;i<Particle.size();i++)
+         if(F == std::string("A"))
+            {
+                for(int i=0;i<Particle.size();i++)
+                {
+                    ACKLEY(DIM,i);
+                }
+            }
+        else if (F == std::string("R"))
         {
-            ACKLEY(DIM,i);
+            for(int i=0;i<Particle.size();i++)
+            {
+                RASTRIGIN(DIM,i);
+            }
         }
+        else if(F ==std::string("RO"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                ROSENBROCK(DIM,i);  
+            }
+        }
+        else if(F ==std::string("S"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                SPHERE(DIM,i);  
+            }
+        }
+        else if(F ==std::string("M"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Michalewicz(DIM,i);
+            }
+        }
+        
     }
     void pairsort(d1d a, d1d &b) 
     { 
@@ -163,7 +198,7 @@ class LSHADE{
         std::cauchy_distribution<double> distribution(mean,0.1);
         return distribution(g2);
     }
-    void Mutation_Selection(int pbest,int A,int H,int iter)
+    void Mutation_Selection(int pbest,int A,int H,int iter,const char*F)
     {
         d2d S_Table;
         d2d V(Particle.size(),d1d(Particle[0].size()));
@@ -191,10 +226,16 @@ class LSHADE{
                 {
                     V[i][j] = Particle[i][j];
                 }
+                
+
+                if(V[i][j] < min)
+                    V[i][j] =min;
+                else if(V[i][j] > max)
+                    V[i][j]  = max;
             }
             
         }
-        Evaluation(V,CR_Table,F_Table,A,H,iter);
+        Evaluation(V,CR_Table,F_Table,A,H,iter,F);
 
     }
 
@@ -272,12 +313,12 @@ class LSHADE{
 
     }
 
-    void Evaluation(d2d V,d1d CR,d1d F,int A,int H,int iter)
+    void Evaluation(d2d V,d1d CR,d1d F,int A,int H,int iter,const char *K)
     {
         d2d S_Table;
         for(int i=0;i<V.size();i++)
         {
-            double V_Objective_Value = Function_Evaluate(V[i].size(),V[i]);
+            double V_Objective_Value = Function_Evaluate(V[i].size(),V[i],K);
             if( V_Objective_Value < Objective_Value[i])
             {
                 d1d X;
@@ -318,8 +359,8 @@ class LSHADE{
 
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
     {
-        double max = 40.0;
-        double min = -40.0;
+        max = 40.0;
+        min = -40.0;
    
         for(int i=0;i<DIM;i++)
         {
@@ -330,25 +371,7 @@ class LSHADE{
         double F = ACKLEY_OBJECTIVE_VALUE(DIM,Particle[index]);
         Objective_Value[index] = F;
     }
-    // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
-    // {
-    //     int MAX_NFE = ITER;
-    //     int NFE = iteration;
-    //     int nmin = 5;
-    //     int ninit = NOW_POP;
-
-    //     int new_pop = (nmin - ninit)/MAX_NFE*NFE + ninit;
-
-    //     if (new_pop < NOW_POP)
-    //     {
-    //         int DELETE = NOW_POP - new_pop;
-    //         for(int i=0;i<DELETE;i++)
-    //         {
-
-    //         }
-
-    //     }
-    // }
+  
     double ACKLEY_OBJECTIVE_VALUE(int DIM,d1d arr) //Calculate the objective value at ACKLEY Function 
     {
         double sum1= 0;
@@ -363,9 +386,181 @@ class LSHADE{
         double F = -20*(exp((-0.2)*sqrt(sum1/DIM)))-exp(sum2/DIM)+20+exp(1);
         return F;
     }
-    double Function_Evaluate(int DIM,d1d arr)
+    double RASTRIGIN_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1= 0;
+            double sum2 = 0;
+            for(int i=0;i<DIM;i++)
+            {
+
+                sum1 += pow(arr[i],2);
+                sum2 += cos(2*M_PI*arr[i]);
+
+            }
+            double F =  sum1 - 10*sum2 +10*DIM;
+            return F;
+        }
+          
+        
+    void RASTRIGIN(int DIM,int index) //random initial in RASTRIGIN Function and using RADVIZ calculate 2 dimension coordinates
     {
-        return ACKLEY_OBJECTIVE_VALUE( DIM, arr);
+         max = 5.12;
+         min = -5.12;
+
+        for(int i=0;i<DIM;i++)
+        {
+            double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+            Particle[index][i] = a;
+
+        }
+
+        double F = RASTRIGIN_OBJECTIVE_VALUE(DIM,Particle[index]);
+        Objective_Value[index] = F;
+    }
+    double ROSENBROCK_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            double sum2 = 0;
+            for(int i=1;i<DIM;i++)
+            {
+                sum1 += pow (arr[i] - pow(arr[i-1],2),2) ;
+                sum2 += pow(arr[i]-1 ,2);
+            // cout<<"S "<<sum1<<' '<<sum2<<endl;
+
+            }
+            double F =  100*sum1 +sum2;
+            return F;
+        }
+        void ROSENBROCK(int DIM,int index)
+        {
+             max = 10;
+             min = -5;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i]= a;
+            }
+
+            double F = ROSENBROCK_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+
+        double SPHERE_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1= 0;
+            for(int i=0;i<DIM;i++)
+            {
+
+                sum1 += pow(arr[i],2);
+
+
+            }
+            double F =  sum1;
+            return F;
+        }
+          
+        
+        void SPHERE(int DIM,int index) //random initial in RASTRIGIN Function and using RADVIZ calculate 2 dimension coordinates
+        {
+             max = M_PI;
+             min = 0;
+
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+
+            }
+
+            double F = SPHERE_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+        double Michalewicz_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum = 0;
+            for(int i=0;i<DIM;i++)
+            {
+                double cal1 = 0;
+                double cal2 = 0;
+                cal1 = sin(2*M_PI*arr[i]);
+
+                double X = pow(arr[i],2);
+                cal2 = sin(i*X/M_PI);
+                cal2 = pow(cal2,20);
+
+                sum += cal1*cal2;
+            }
+            double F =  -sum;
+            return F;
+        }
+          
+        
+        void Michalewicz(int DIM,int index) //random initial in RASTRIGIN Function and using RADVIZ calculate 2 dimension coordinates
+        {
+             max = 5.12;
+             min = -5.12;
+
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+
+            }
+
+            double F = Michalewicz_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+
+    void INI_FUNCTION(int DIM,int index,const char *F)
+        {
+            if(F == std::string("A"))
+            {
+                ACKLEY(DIM,index);
+            }
+            else if (F == std::string("R"))
+                RASTRIGIN(DIM,index);
+            else if(F ==std::string("RO"))
+                ROSENBROCK(DIM,index);  
+            else if(F ==std::string("S"))
+                SPHERE(DIM,index);  
+            else if(F ==std::string("M"))
+                Michalewicz(DIM,index);
+
+        }
+        double FUNCTION(int DIM,d1d arr,const char *F)
+        {
+            double R = 0.0;
+            if(F == std::string("A"))
+            {
+                R = ACKLEY_OBJECTIVE_VALUE(DIM,arr);
+            }
+            else if (F == std::string("R"))
+                R = RASTRIGIN_OBJECTIVE_VALUE(DIM,arr);
+           
+            else if (F == std::string("RO"))
+                R = ROSENBROCK_OBJECTIVE_VALUE(DIM,arr);
+            else if (F == std::string("S"))
+                R = SPHERE_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("M"))
+                R = Michalewicz_OBJECTIVE_VALUE(DIM,arr);
+            return R;
+        }    
+    double Function_Evaluate(int DIM,d1d arr,const char *F)
+    {
+        if(F == std::string("A"))
+        {
+            return ACKLEY_OBJECTIVE_VALUE(DIM,arr);
+        }
+        else if (F == std::string("R"))
+            return RASTRIGIN_OBJECTIVE_VALUE(DIM,arr);
+           
+        else if (F == std::string("RO"))
+            return ROSENBROCK_OBJECTIVE_VALUE(DIM,arr);
+        else if (F == std::string("S"))
+            return SPHERE_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("M"))
+            return  Michalewicz_OBJECTIVE_VALUE(DIM,arr);
     }
     void OUT(int run ,int iteration,int dim,double START,double END)
     {
@@ -390,4 +585,24 @@ class LSHADE{
         cout<<"# Average Objective Value "<<AVG<<endl;
         cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
     }
+
+      // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
+    // {
+    //     int MAX_NFE = ITER;
+    //     int NFE = iteration;
+    //     int nmin = 5;
+    //     int ninit = NOW_POP;
+
+    //     int new_pop = (nmin - ninit)/MAX_NFE*NFE + ninit;
+
+    //     if (new_pop < NOW_POP)
+    //     {
+    //         int DELETE = NOW_POP - new_pop;
+    //         for(int i=0;i<DELETE;i++)
+    //         {
+
+    //         }
+
+    //     }
+    // }
 };
