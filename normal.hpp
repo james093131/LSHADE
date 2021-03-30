@@ -354,7 +354,8 @@ class LSHADE{
     
         Update_Htable(H,S_Table);
         Run_Iteration_Result[iter] += Current_Best;
-        cout<<"# "<<iter<<' '<<Current_Best<<endl;
+        if(iter%1000 == 0)
+            cout<<"# "<<iter<<' '<<Current_Best<<endl;
     }
 
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
