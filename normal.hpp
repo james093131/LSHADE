@@ -66,7 +66,7 @@ class LSHADE{
                 r++;
             }
             double END = clock();
-            OUT( RUN, ITER,DIM,START,END);
+            OUT( RUN, ITER,DIM,START,END,F);
         }
     private:
         d2d Particle;
@@ -562,7 +562,7 @@ class LSHADE{
         else if(F ==std::string("M"))
             return  Michalewicz_OBJECTIVE_VALUE(DIM,arr);
     }
-    void OUT(int run ,int iteration,int dim,double START,double END)
+    void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
     {
         double BEST = Run_Result[0];
         double AVG = 0;
@@ -577,7 +577,19 @@ class LSHADE{
         {
             cout<<i+1<<' '<<Run_Iteration_Result[i]/run <<endl;
         }
-        cout<<"# Testing Function : "<<"ACKLEY"<<endl;
+        string FUN;
+        if(F == std::string("A"))
+             FUN = "Ackley";
+        else if(F == std::string("R"))
+            FUN = "Rastrigin";
+        else if(F == std::string("RO"))
+            FUN = "Rosenbrock";
+        else if(F == std::string("S"))
+            FUN = "Sphere";  
+        else if(F == std::string("M"))
+            FUN = "Michalewicz";  
+
+        cout<<"# Testing Function : "<<FUN<<endl;
         cout<<"# Run : "<<run<<endl;
         cout<<"# Iteration :"<<iteration<<endl;
         cout<<"# DIM  "<<dim<<endl;
