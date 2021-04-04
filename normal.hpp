@@ -35,10 +35,12 @@ class LSHADE{
     public :
         d1d Run_Result;
         d1d Run_Iteration_Result;
+        d2d Record_point;
+        d1d Record_Objective_Value;
         double max;
         double min;
     public:
-        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest,const char *F)
+        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest,const char *F,int OUTPUT_NODE_QUANTITY)
         {
 
             Run_Result.resize(RUN);
@@ -50,7 +52,7 @@ class LSHADE{
             while(r<RUN)
             {
                 srand( time(NULL) );
-                INI(ITER,POP,DIM,A,H);
+                INI(ITER,POP,DIM,A,H,OUTPUT_NODE_QUANTITY);
 
                 Particle_INI(DIM,F);
 
@@ -59,13 +61,17 @@ class LSHADE{
                 {
                     RANK();
                     Mutation_Selection(pbest,A,H,iteration,F);
+                    Record_Point(OUTPUT_NODE_QUANTITY/ITER);
 
+                    if (CURRENT_RECORD_NODE % 10000 == 0)
+                        OUTPUT_RECORD_NODE(F,DIM);
                     iteration ++;
                 }
                 Run_Result[r] = Current_Best;
                 r++;
             }
             double END = clock();
+            OUTPUT_RECORD_NODE(F,DIM);
             OUT( RUN, ITER,DIM,START,END,F);
         }
     private:
@@ -79,9 +85,10 @@ class LSHADE{
         int H_Table_Coef;
         // int NOW_POP;
         double Current_Best;
+        int CURRENT_RECORD_NODE; //現在存了多少個點了
     
     private:
-    void INI(int ITER,int POP,int DIM,int A,int H)
+    void INI(int ITER,int POP,int DIM,int A,int H,int OUTPUT_NODE_QUANTITY)
     {
         Particle.clear();
         Particle.swap((Particle));
@@ -101,6 +108,12 @@ class LSHADE{
         Objective_Rank_INDEX.clear();
         Objective_Rank_INDEX.swap(Objective_Rank_INDEX);
 
+        Record_point.clear();
+        Record_point.swap(Record_point);
+
+        Record_Objective_Value.clear();
+        Record_Objective_Value.swap(Record_Objective_Value);
+
         Particle.resize(POP,d1d(DIM));
 
         Objective_Value.resize(POP);
@@ -109,6 +122,10 @@ class LSHADE{
 
         H_Table.resize(H,d1d(2,0.5));
 
+        Record_point.resize(OUTPUT_NODE_QUANTITY,d1d(DIM));
+
+        Record_Objective_Value.resize(OUTPUT_NODE_QUANTITY);
+
         Objective_Rank_INDEX.resize(POP);
         for(int i=0;i<POP;i++)
         {
@@ -116,6 +133,8 @@ class LSHADE{
         }
 
         Current_Best  = DBL_MAX;
+
+        CURRENT_RECORD_NODE = 0;
         // NOW_POP = POP;
     }
 
@@ -155,6 +174,13 @@ class LSHADE{
             for(int i=0;i<Particle.size();i++)
             {
                 Michalewicz(DIM,i);
+            }
+        }
+        else if (F ==std::string("B"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Bent_Cigar(DIM,i);
             }
         }
         
@@ -355,7 +381,11 @@ class LSHADE{
         Update_Htable(H,S_Table);
         Run_Iteration_Result[iter] += Current_Best;
         if(iter%1000 == 0)
+        {
             cout<<"# "<<iter<<' '<<Current_Best<<endl;
+         
+        }
+
     }
 
     void ACKLEY(int DIM,int index) //random initial in ACKLEY Function and using RADVIZ calculate 2 dimension coordinates
@@ -513,6 +543,36 @@ class LSHADE{
             Objective_Value[index] = F;
         }
 
+         double Bent_Cigar_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1= 0;
+            double sum2 = 0;
+            sum1 = pow(arr[0],2);
+            for(int i=1;i<DIM;i++)
+            {
+
+                sum2 += pow(arr[i],2);
+
+            }
+            double F =  sum1 +1000000*sum2;
+            return F;
+        }
+        void Bent_Cigar(int DIM,int index)
+        {
+            max = 100;
+            min = -100;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = Bent_Cigar_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+
+
     void INI_FUNCTION(int DIM,int index,const char *F)
         {
             if(F == std::string("A"))
@@ -527,6 +587,8 @@ class LSHADE{
                 SPHERE(DIM,index);  
             else if(F ==std::string("M"))
                 Michalewicz(DIM,index);
+            else if(F ==std::string("B"))
+                Bent_Cigar(DIM,index);
 
         }
         double FUNCTION(int DIM,d1d arr,const char *F)
@@ -545,6 +607,8 @@ class LSHADE{
                 R = SPHERE_OBJECTIVE_VALUE(DIM,arr);
             else if(F ==std::string("M"))
                 R = Michalewicz_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("B"))
+                R = Bent_Cigar_OBJECTIVE_VALUE(DIM,arr);
             return R;
         }    
     double Function_Evaluate(int DIM,d1d arr,const char *F)
@@ -562,6 +626,8 @@ class LSHADE{
             return SPHERE_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("M"))
             return  Michalewicz_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("B"))
+            return Bent_Cigar_OBJECTIVE_VALUE(DIM,arr);
     }
     void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
     {
@@ -589,6 +655,8 @@ class LSHADE{
             FUN = "Sphere";  
         else if(F == std::string("M"))
             FUN = "Michalewicz";  
+        else if(F ==std::string("B"))
+            FUN = "Bent Cigar";
 
         cout<<"# Testing Function : "<<FUN<<endl;
         cout<<"# Run : "<<run<<endl;
@@ -598,7 +666,54 @@ class LSHADE{
         cout<<"# Average Objective Value "<<AVG<<endl;
         cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
     }
+    void Record_Point(int EACH_Iteration_Record)
+    {
+        int len = Particle.size();
+        i1d index(len,0);
+        for(int i=0;i<len;i++)
+        {
+            index[i] = i;
+        }   
 
+        i1d CHOOSE(EACH_Iteration_Record,0);
+        int k = 0;
+        while(k != CHOOSE.size())
+        {
+            int x = rand() % ( (index.size()-1) - 0 + 1) + 0;
+            if(index[x]!=-1)
+            {
+            CHOOSE[k] = index[x];
+            index[x] = -1;
+            k++;
+            }
+        }
+        for(int i=0;i<CHOOSE.size();i++)
+        {
+            Record_point[CURRENT_RECORD_NODE].assign(Particle[CHOOSE[i]].begin(),Particle[CHOOSE[i]].end());
+            Record_Objective_Value[CURRENT_RECORD_NODE] = Objective_Value[CHOOSE[i]];
+            CURRENT_RECORD_NODE++;
+        }   
+    }
+     void OUTPUT_RECORD_NODE(const char *F,int DIM)
+        {
+            fstream file;
+           
+            string Z = "RECORD/";
+            string A = Z+F+to_string(DIM)+"_"+to_string(CURRENT_RECORD_NODE)+".txt";
+            file.open(A,ios::out);
+            
+            for(int i=0;i<CURRENT_RECORD_NODE;i++)
+            {
+                for(int j=0;j<Record_point[i].size();j++)
+                {
+                    file << Record_point[i][j]<<' ';
+                }
+
+                file<<Record_Objective_Value[i]<<endl;
+            }
+        
+           
+        }
       // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
     // {
     //     int MAX_NFE = ITER;
