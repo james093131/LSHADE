@@ -63,15 +63,15 @@ class LSHADE{
                     Mutation_Selection(pbest,A,H,iteration,F);
                     Record_Point(OUTPUT_NODE_QUANTITY/ITER);
 
-                    if (CURRENT_RECORD_NODE % 10000 == 0)
-                        OUTPUT_RECORD_NODE(F,DIM);
+                    if (iteration % 100 == 0)
+                        OUTPUT_RECORD_NODE(F,DIM,iteration);
                     iteration ++;
                 }
                 Run_Result[r] = Current_Best;
                 r++;
             }
             double END = clock();
-            OUTPUT_RECORD_NODE(F,DIM);
+            OUTPUT_RECORD_NODE(F,DIM,ITER);
             OUT( RUN, ITER,DIM,START,END,F);
         }
     private:
@@ -162,7 +162,7 @@ class LSHADE{
                 ROSENBROCK(DIM,i);  
             }
         }
-        else if(F ==std::string("S"))
+        else if(F ==std::string("SP"))
         {
             for(int i=0;i<Particle.size();i++)
             {
@@ -183,7 +183,20 @@ class LSHADE{
                 Bent_Cigar(DIM,i);
             }
         }
-        
+        else if (F==std::string("S"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Schaffer_F7(DIM,i);
+            }
+        }
+        else if(F ==std::string("Z"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Zakharov(DIM,i);
+            }
+        }
     }
     void pairsort(d1d a, d1d &b) 
     { 
@@ -571,8 +584,60 @@ class LSHADE{
             double F = Bent_Cigar_OBJECTIVE_VALUE(DIM,Particle[index]);
             Objective_Value[index] = F;
         }
+        double Schaffer_F7_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double F = 0;
+            for(int i=0;i<DIM-1;i++)
+            {
+                double si = sqrt( pow(arr[i],2)+pow(arr[i+1],2) );
+                double F1 = sqrt(si)* (sin(50*pow(si,0.2))+1);
+                F += pow(F1/(DIM-1) , 2);
 
+            }
+            
+            return F;
+        }
+        void Schaffer_F7(int DIM,int index)
+        {
+            max = 100;
+            min = -100;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
 
+            double F = Schaffer_F7_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+        double Zakharov_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            double sum2 = 0;
+            for(int i=0;i<DIM;i++)
+            {
+                sum1 += pow(arr[i],2);
+                sum2 += 0.5*(i+1)*arr[i];
+
+            }
+            double F =  sum1 +pow(sum2,2)+pow(sum2,4);
+            return F;
+        }
+        void Zakharov(int DIM,int index)
+        {
+            max = 10;
+            min = -5;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = Zakharov_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
     void INI_FUNCTION(int DIM,int index,const char *F)
         {
             if(F == std::string("A"))
@@ -583,12 +648,16 @@ class LSHADE{
                 RASTRIGIN(DIM,index);
             else if(F ==std::string("RO"))
                 ROSENBROCK(DIM,index);  
-            else if(F ==std::string("S"))
+            else if(F ==std::string("SP"))
                 SPHERE(DIM,index);  
             else if(F ==std::string("M"))
                 Michalewicz(DIM,index);
             else if(F ==std::string("B"))
                 Bent_Cigar(DIM,index);
+            else if(F==std::string("S"))
+                Schaffer_F7(DIM,index);
+            else if(F ==std::string("Z"))
+                Zakharov(DIM,index);
 
         }
         double FUNCTION(int DIM,d1d arr,const char *F)
@@ -603,12 +672,16 @@ class LSHADE{
            
             else if (F == std::string("RO"))
                 R = ROSENBROCK_OBJECTIVE_VALUE(DIM,arr);
-            else if (F == std::string("S"))
+            else if (F == std::string("SP"))
                 R = SPHERE_OBJECTIVE_VALUE(DIM,arr);
             else if(F ==std::string("M"))
                 R = Michalewicz_OBJECTIVE_VALUE(DIM,arr);
             else if(F ==std::string("B"))
                 R = Bent_Cigar_OBJECTIVE_VALUE(DIM,arr);
+             else if(F==std::string("S"))
+                R = Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("Z"))
+                Zakharov_OBJECTIVE_VALUE(DIM,arr);
             return R;
         }    
     double Function_Evaluate(int DIM,d1d arr,const char *F)
@@ -622,13 +695,18 @@ class LSHADE{
            
         else if (F == std::string("RO"))
             return ROSENBROCK_OBJECTIVE_VALUE(DIM,arr);
-        else if (F == std::string("S"))
+        else if (F == std::string("SP"))
             return SPHERE_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("M"))
             return  Michalewicz_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("B"))
             return Bent_Cigar_OBJECTIVE_VALUE(DIM,arr);
-    }
+        else if(F==std::string("S"))
+            return Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("Z"))
+                Zakharov_OBJECTIVE_VALUE(DIM,arr);
+        }
+    
     void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
     {
         double BEST = Run_Result[0];
@@ -651,13 +729,16 @@ class LSHADE{
             FUN = "Rastrigin";
         else if(F == std::string("RO"))
             FUN = "Rosenbrock";
-        else if(F == std::string("S"))
+        else if(F == std::string("SP"))
             FUN = "Sphere";  
         else if(F == std::string("M"))
             FUN = "Michalewicz";  
         else if(F ==std::string("B"))
             FUN = "Bent Cigar";
-
+        else if(F==std::string("S"))
+            FUN = "Schaffer_F7";
+        else if(F ==std::string("Z"))
+            FUN = "Zakharov";
         cout<<"# Testing Function : "<<FUN<<endl;
         cout<<"# Run : "<<run<<endl;
         cout<<"# Iteration :"<<iteration<<endl;
@@ -694,12 +775,12 @@ class LSHADE{
             CURRENT_RECORD_NODE++;
         }   
     }
-     void OUTPUT_RECORD_NODE(const char *F,int DIM)
+     void OUTPUT_RECORD_NODE(const char *F,int DIM,int ITER)
         {
             fstream file;
            
             string Z = "RECORD/";
-            string A = Z+F+to_string(DIM)+"_"+to_string(CURRENT_RECORD_NODE)+".txt";
+            string A = Z+F+to_string(DIM)+"_"+to_string(ITER)+".txt";
             file.open(A,ios::out);
             
             for(int i=0;i<CURRENT_RECORD_NODE;i++)
@@ -714,6 +795,8 @@ class LSHADE{
         
            
         }
+
+    
       // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
     // {
     //     int MAX_NFE = ITER;
