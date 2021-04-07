@@ -681,7 +681,7 @@ class LSHADE{
              else if(F==std::string("S"))
                 R = Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
             else if(F ==std::string("Z"))
-                Zakharov_OBJECTIVE_VALUE(DIM,arr);
+                R = Zakharov_OBJECTIVE_VALUE(DIM,arr);
             return R;
         }    
     double Function_Evaluate(int DIM,d1d arr,const char *F)
@@ -704,7 +704,7 @@ class LSHADE{
         else if(F==std::string("S"))
             return Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("Z"))
-                Zakharov_OBJECTIVE_VALUE(DIM,arr);
+            return Zakharov_OBJECTIVE_VALUE(DIM,arr);
         }
     
     void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
