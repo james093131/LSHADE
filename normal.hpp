@@ -61,10 +61,13 @@ class LSHADE{
                 {
                     RANK();
                     Mutation_Selection(pbest,A,H,iteration,F);
-                    Record_Point(OUTPUT_NODE_QUANTITY/ITER);
+                    RANK();
 
-                    if (iteration % 100 == 0)
-                        OUTPUT_RECORD_NODE(F,DIM,iteration);
+                    // Record_Point(OUTPUT_NODE_QUANTITY/ITER);
+
+                    // if (iteration % 100 == 0)
+                    //     OUTPUT_RECORD_NODE(F,DIM,iteration);
+                    Particle = Linear_Reduction(ITER, iteration,Objective_Value.size());
                     iteration ++;
                 }
                 Run_Result[r] = Current_Best;
@@ -208,12 +211,12 @@ class LSHADE{
         for (int i = 0; i < n; i++)  
         { 
             pairt[i].first = a[i]; 
-            pairt[i].second = b[i]; 
+            pairt[i].second = i; 
         } 
-    
+       
         // Sorting the pair array. 
         sort(pairt, pairt + n); 
-        
+       
         // Modifying original arrays 
         for (int i = 0; i < n; i++)  
         { 
@@ -393,7 +396,7 @@ class LSHADE{
     
         Update_Htable(H,S_Table);
         Run_Iteration_Result[iter] += Current_Best;
-        if(iter%1000 == 0)
+        if(iter%10 == 0)
         {
             cout<<"# "<<iter<<' '<<Current_Best<<endl;
          
@@ -705,7 +708,7 @@ class LSHADE{
             return Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("Z"))
             return Zakharov_OBJECTIVE_VALUE(DIM,arr);
-        }
+    }
     
     void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
     {
@@ -797,23 +800,51 @@ class LSHADE{
         }
 
     
-      // void Linear_Reduction(int ITER,int iteration,int NOW_POP)
-    // {
-    //     int MAX_NFE = ITER;
-    //     int NFE = iteration;
-    //     int nmin = 5;
-    //     int ninit = NOW_POP;
+    d2d Linear_Reduction(int ITER,int iteration,int NOW_POP)
+    {
+        int MAX_NFE = ITER;
+        int NFE = iteration;
+        int nmin = 5;
+        int ninit = NOW_POP;
 
-    //     int new_pop = (nmin - ninit)/MAX_NFE*NFE + ninit;
+        int new_pop = (nmin - ninit)*NFE/MAX_NFE + ninit;
+        if (new_pop < NOW_POP)
+        {
+                // cout<<"T"<<endl;
+                // for(int i=0;i<Objective_Value.size();i++)
+                // {
+                //     // cout<<i<<' '<<<endl;
+                //     cout<<i<<' '<<Objective_Rank_INDEX[i]<<' '<<Objective_Value[Objective_Rank_INDEX[i]]<<endl;
+                // }
+                
+            
+            d2d P;
+            int DELETE = NOW_POP - new_pop;
+            d1d DELETE_INDEX(DELETE,0);
+            for(int i=0;i<DELETE;i++)
+            {
+                DELETE_INDEX[i] = Objective_Rank_INDEX[Objective_Rank_INDEX.size()-1-i];
+            }
+            sort(DELETE_INDEX.begin(),DELETE_INDEX.end(),greater<int>());
+            for(int i=0;i<DELETE;i++)
+            {
+                
+                Objective_Value.erase(Objective_Value.begin()+DELETE_INDEX[i]);
+                Objective_Rank_INDEX.erase(Objective_Rank_INDEX.begin()+DELETE_INDEX[i]);
+            }
+            for(int i=0;i<Particle.size();i++)
+            {
+                if(i != DELETE_INDEX[i])
+                {
+                    d1d A;
+                    A.assign(Particle[i].begin(),Particle[i].end());
+                    P.push_back(A);
+                }
 
-    //     if (new_pop < NOW_POP)
-    //     {
-    //         int DELETE = NOW_POP - new_pop;
-    //         for(int i=0;i<DELETE;i++)
-    //         {
-
-    //         }
-
-    //     }
-    // }
+            }
+            // cout<<endl<<iteration<<' '<<Objective_Value.size()<<' '<<Objective_Rank_INDEX.size()<<' '<<P.size()<<endl;   
+            return P;         
+        }
+        return Particle;
+    }
 };
