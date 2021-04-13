@@ -19,4 +19,4 @@ The detail of the LSHADE can see at  Improving the search performance of SHADE u
 
   or
   
-  ./LSHADE [runs] [iterations] [Population] [Dimension] [Archieve] [Historical] [pbest] [Testing_Function] [Record_Points]
+  ./LSHADE [runs] [iterations] [Population] [Dimension] [Archieve] [Historical] [pbest] [Testing_Function] [Record_Points] [Use_Linear_Reduction_or_not][Evaluation]

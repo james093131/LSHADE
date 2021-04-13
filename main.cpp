@@ -10,18 +10,20 @@ int main(int argc,const char *argv[])
     int H = atoi(argv[6]);
     int pbest = atoi(argv[7]);
     const char *F = argv[8];
-    int OUTPUT_NODE_QUANTITY = atoi(argv[9]);
+    const char *MODE = argv[9];
+    int OUTPUT_NODE_QUANTITY = atoi(argv[10]);
+    int Evaluation = atoi(argv[11]);
     if( argc > 1 )
     {
         LSHADE lshade;
-        lshade.RUN( run,iteration,pop, DIM, A, H, pbest,F,OUTPUT_NODE_QUANTITY);
+        lshade.RUN( run,iteration,pop, DIM, A, H, pbest,F,OUTPUT_NODE_QUANTITY,MODE,Evaluation);
     }
       
     else 
     {
         LSHADE lshade;
         const char *K ="A";
-        lshade.RUN(1,2000,100,50,100,100,4,K,10000);
+        lshade.RUN(1,2000,100,50,100,100,4,K,10000,"R",50000);
 
     }
    

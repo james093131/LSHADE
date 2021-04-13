@@ -34,17 +34,17 @@ typedef vector<d3d> d4d;
 class LSHADE{
     public :
         d1d Run_Result;
-        d1d Run_Iteration_Result;
+        d1d Run_Evaluation_Result;
         d2d Record_point;
         d1d Record_Objective_Value;
         double max;
         double min;
     public:
-        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest,const char *F,int OUTPUT_NODE_QUANTITY)
+        void RUN(int RUN,int ITER,int POP,int DIM,int A,int H,int pbest,const char *F,int OUTPUT_NODE_QUANTITY,const char *MODE,int EVALUATION)
         {
 
             Run_Result.resize(RUN);
-            Run_Iteration_Result.resize(ITER,0);
+            Run_Evaluation_Result.resize(EVALUATION/500,0);
             int r = 0;
             srand( time(NULL) );
             double START = clock();
@@ -57,17 +57,24 @@ class LSHADE{
                 Particle_INI(DIM,F);
 
                 int iteration = 0;
-                while(iteration < ITER)
+                while(EVA < EVALUATION)
                 {
                     RANK();
                     Mutation_Selection(pbest,A,H,iteration,F);
                     RANK();
 
-                    // Record_Point(OUTPUT_NODE_QUANTITY/ITER);
+                    if(MODE ==std::string("L"))
+                    {
+                        Particle = Linear_Reduction(ITER, iteration,Objective_Value.size());
+                    }
+                    else if(MODE ==std::string("R")){
+                        Record_Point(OUTPUT_NODE_QUANTITY/ITER);
 
-                    // if (iteration % 100 == 0)
-                    //     OUTPUT_RECORD_NODE(F,DIM,iteration);
-                    Particle = Linear_Reduction(ITER, iteration,Objective_Value.size());
+                        if (iteration % 1000 == 0)
+                            OUTPUT_RECORD_NODE(F,DIM,iteration);
+                    }
+                
+
                     iteration ++;
                 }
                 Run_Result[r] = Current_Best;
@@ -75,7 +82,7 @@ class LSHADE{
             }
             double END = clock();
             OUTPUT_RECORD_NODE(F,DIM,ITER);
-            OUT( RUN, ITER,DIM,START,END,F);
+            OUT( RUN, ITER,DIM,POP,A,H,pbest,EVALUATION,START,END,F);
         }
     private:
         d2d Particle;
@@ -86,6 +93,7 @@ class LSHADE{
 
         int Archieve_Coef;
         int H_Table_Coef;
+        int EVA ;
         // int NOW_POP;
         double Current_Best;
         int CURRENT_RECORD_NODE; //現在存了多少個點了
@@ -138,6 +146,9 @@ class LSHADE{
         Current_Best  = DBL_MAX;
 
         CURRENT_RECORD_NODE = 0;
+        
+        EVA = 0;
+
         // NOW_POP = POP;
     }
 
@@ -391,14 +402,14 @@ class LSHADE{
                 }
                
             }
-
+            EVA++;
         }
     
         Update_Htable(H,S_Table);
-        Run_Iteration_Result[iter] += Current_Best;
-        if(iter%10 == 0)
+        if(EVA % 500 == 0)
         {
-            cout<<"# "<<iter<<' '<<Current_Best<<endl;
+            Run_Evaluation_Result[(EVA-500)/500] += Current_Best;
+            cout<<"# "<<EVA<<' '<<Current_Best<<endl;
          
         }
 
@@ -710,7 +721,7 @@ class LSHADE{
             return Zakharov_OBJECTIVE_VALUE(DIM,arr);
     }
     
-    void OUT(int run ,int iteration,int dim,double START,double END,const char *F)
+    void OUT(int run ,int iteration,int dim,int POP,int A,int H,int pbest,int evaluation,double START,double END,const char *F)
     {
         double BEST = Run_Result[0];
         double AVG = 0;
@@ -721,9 +732,9 @@ class LSHADE{
                 BEST = Run_Result[i];
         }
         AVG = AVG /run;
-        for(int i=0;i<iteration;i++)
+        for(int i=0;i<Run_Evaluation_Result.size();i++)
         {
-            cout<<i+1<<' '<<Run_Iteration_Result[i]/run <<endl;
+            cout<<i*500+500<<' '<<Run_Evaluation_Result[i]/run <<endl;
         }
         string FUN;
         if(F == std::string("A"))
@@ -745,7 +756,12 @@ class LSHADE{
         cout<<"# Testing Function : "<<FUN<<endl;
         cout<<"# Run : "<<run<<endl;
         cout<<"# Iteration :"<<iteration<<endl;
-        cout<<"# DIM  "<<dim<<endl;
+        cout<<"# Evaluation : "<<evaluation<<endl;
+        cout<<"# DIM : "<<dim<<endl;
+        cout<<"# Population Size : "<<POP<<endl;
+        cout<<"# Achieve Size : "<<A<<endl;
+        cout<<"# Historical Size : "<<H<<endl;
+        cout<<"# Pbest : "<<pbest<<endl;
         cout<<"# Best Objective Value "<<BEST<<endl;
         cout<<"# Average Objective Value "<<AVG<<endl;
         cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
