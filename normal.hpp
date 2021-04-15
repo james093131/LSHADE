@@ -14,7 +14,6 @@
 #include <chrono>
 
 
-
 using namespace std;
 
 typedef vector<char> c1d;
@@ -149,7 +148,6 @@ class LSHADE{
         
         EVA = 0;
 
-        // NOW_POP = POP;
     }
 
    
@@ -402,16 +400,17 @@ class LSHADE{
                 }
                
             }
+           
             EVA++;
+            if(EVA % 500 == 0)
+            {
+                Run_Evaluation_Result[(EVA-500)/500] += Current_Best;
+                cout<<"# "<<EVA<<' '<<Current_Best<<endl;
+            }
         }
-    
+        
         Update_Htable(H,S_Table);
-        if(EVA % 500 == 0)
-        {
-            Run_Evaluation_Result[(EVA-500)/500] += Current_Best;
-            cout<<"# "<<EVA<<' '<<Current_Best<<endl;
-         
-        }
+       
 
     }
 
@@ -736,7 +735,7 @@ class LSHADE{
         {
             cout<<i*500+500<<' '<<Run_Evaluation_Result[i]/run <<endl;
         }
-        string FUN;
+        string FUN;        
         if(F == std::string("A"))
              FUN = "Ackley";
         else if(F == std::string("R"))
@@ -762,9 +761,9 @@ class LSHADE{
         cout<<"# Achieve Size : "<<A<<endl;
         cout<<"# Historical Size : "<<H<<endl;
         cout<<"# Pbest : "<<pbest<<endl;
-        cout<<"# Best Objective Value "<<BEST<<endl;
-        cout<<"# Average Objective Value "<<AVG<<endl;
-        cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
+        cout<<"# Best Objective Value "<<endl<<BEST<<endl;
+        cout<<"# Average Objective Value "<<endl<<AVG<<endl;
+        cout<<"# Execution Time :"<<endl<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
     }
     void Record_Point(int EACH_Iteration_Record)
     {
