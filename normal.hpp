@@ -62,11 +62,11 @@ class LSHADE{
                     Mutation_Selection(pbest,A,H,iteration,F);
                     RANK();
 
-                    if(MODE ==std::string("L"))
+                    if(MODE ==std::string("L"))//LSHADE
                     {
                         Particle = Linear_Reduction(ITER, iteration,Objective_Value.size());
                     }
-                    else if(MODE ==std::string("R")){
+                    else if(MODE ==std::string("R")){//Record
                         Record_Point(OUTPUT_NODE_QUANTITY/ITER);
 
                         if (iteration % 1000 == 0)
@@ -232,7 +232,7 @@ class LSHADE{
             b[i] = pairt[i].second; 
         } 
     } 
-    void RANK()
+    void RANK()//sort descending
     {
       pairsort(Objective_Value,Objective_Rank_INDEX); 
     }
