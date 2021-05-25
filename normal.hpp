@@ -651,6 +651,155 @@ class LSHADE{
             double F = Zakharov_OBJECTIVE_VALUE(DIM,Particle[index]);
             Objective_Value[index] = F;
         }
+        double Griewank_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            double sum2 = 0;
+            for(int i=0;i<DIM;i++)
+            {
+                sum1 += pow(arr[i],2);
+                sum2 *= cos( (arr[i]/sqrt(i)) );
+
+            }
+            double F =  sum1/4000 - sum2 +1;
+            return F;
+        }
+        void Griewank(int DIM,int index)
+        {
+            max = 600;
+            min = -600;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = Griewank_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+        // double SchafferN2_OBJECTIVE_VALUE(int DIM,d1d arr)
+        // {
+        //     double sum1 = 0;
+        //     double sum2 = 0;
+        //     for(int i=0;i<DIM;i++)
+        //     {
+        //         sum1 += pow(arr[i],2);
+        //         sum2 += pow(arr[i],2);
+
+        //     }
+        //     double F = 0.5+ sin(pow(sum1,2));
+        //     return F;
+        // }
+        double Schwefel_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            double sum2 = 0;
+            for(int i=0;i<DIM;i++)
+            {
+                sum1 += arr[i]*sin( sqrt(arr[i]) ) ;
+
+            }
+            double F =  418.9829*DIM - sum1;
+            return F;
+        }
+        void Schwefel(int DIM,int index)
+        {
+            max = 500;
+            min = -500;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = Schwefel_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+          //  double BOHACHEVSKY_OBJECTIVE_VALUE(int DIM,d1d arr)
+        // {
+        //只有2D函式還沒寫好
+        //     double sum1 = 0;
+        //     double sum2 = 0;
+        //     for(int i=0;i<DIM;i++)
+        //     {
+        //         sum1 += arr[i]*sin( sqrt(arr[i]) ) ;
+
+        //     }
+        //     double F =  418.9829*DIM - sum1;
+        //     return F;
+        // }
+        double SUM_SQUARES_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            for(int i=0;i<DIM;i++)
+            {
+                sum1 += i*pow(arr[i],2);
+
+            }
+            double F = sum1;
+            return F;
+        }
+        void SUM_SQUARES(int DIM,int index)
+        {
+            max = 10;
+            min = -10;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = SUM_SQUARES_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+        // double Booth_OBJECTIVE_VALUE(int DIM,d1d arr)
+        // {
+        //只有2D函式還沒寫好
+        //     double sum1 = 0;
+        //     for(int i=0;i<DIM;i++)
+        //     {
+        //         sum1 += i*pow(arr[i],2);
+
+        //     }
+        //     double F = sum1;
+        //     return F;
+        // }
+        double POWELL_OBJECTIVE_VALUE(int DIM,d1d arr)
+        {
+            double sum1 = 0;
+            for(int i=1;i<DIM/4;i++)
+            {
+                double temp = 0.0;
+                temp += pow( (arr[i*4-3]+10*arr[i*4-2]) ,2);
+                temp += 5*pow( (arr[i*4-1] - arr[i*4]) ,2);
+                double t3 = (arr[i*4-2] - 2*arr[i*4-1]);
+                temp += pow(t3,4);
+                double t4 = (arr[i*4-3] + 10*arr[i*4]);
+                temp += 10*pow(t4,4);
+                sum1 += temp;
+
+            }
+            double F = sum1;
+            return F;
+        }
+        void POWELL(int DIM,int index)
+        {
+            max = 5;
+            min = -4;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                Particle[index][i] = a;
+            }
+
+            double F = POWELL_OBJECTIVE_VALUE(DIM,Particle[index]);
+            Objective_Value[index] = F;
+        }
+        
     void INI_FUNCTION(int DIM,int index,const char *F)
         {
             if(F == std::string("A"))
@@ -671,7 +820,14 @@ class LSHADE{
                 Schaffer_F7(DIM,index);
             else if(F ==std::string("Z"))
                 Zakharov(DIM,index);
-
+            else if(F ==std::string("G"))
+                Griewank(DIM,index);
+            else if(F ==std::string("SC"))
+                Schwefel(DIM,index);
+            else if(F ==std::string("SS"))
+                SUM_SQUARES(DIM,index);
+            else if(F ==std::string("P"))
+                POWELL(DIM,index);
         }
         double FUNCTION(int DIM,d1d arr,const char *F)
         {
@@ -695,6 +851,14 @@ class LSHADE{
                 R = Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
             else if(F ==std::string("Z"))
                 R = Zakharov_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("G"))
+                R = Griewank_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("SC"))
+                R = Schwefel_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("SS"))
+                R = SUM_SQUARES_OBJECTIVE_VALUE(DIM,arr);
+            else if(F ==std::string("P"))
+                R = POWELL_OBJECTIVE_VALUE(DIM,arr);
             return R;
         }    
     double Function_Evaluate(int DIM,d1d arr,const char *F)
@@ -718,6 +882,15 @@ class LSHADE{
             return Schaffer_F7_OBJECTIVE_VALUE(DIM,arr);
         else if(F ==std::string("Z"))
             return Zakharov_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("G"))
+            return Griewank_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("SC"))
+            return Schwefel_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("SS"))
+            return SUM_SQUARES_OBJECTIVE_VALUE(DIM,arr);
+        else if(F ==std::string("P"))
+            return  POWELL_OBJECTIVE_VALUE(DIM,arr);
+
     }
     
     void OUT(int run ,int iteration,int dim,int POP,int A,int H,int pbest,int evaluation,double START,double END,const char *F)
@@ -752,6 +925,14 @@ class LSHADE{
             FUN = "Schaffer_F7";
         else if(F ==std::string("Z"))
             FUN = "Zakharov";
+        else if(F ==std::string("G"))
+            FUN = "Griewank";
+        else if(F ==std::string("SC"))
+            FUN = "Schwefel";
+        else if(F ==std::string("SS"))
+            FUN = "SUM SQUARES";
+        else if(F ==std::string("P"))
+            FUN = "Powell";
         cout<<"# Testing Function : "<<FUN<<endl;
         cout<<"# Run : "<<run<<endl;
         cout<<"# Iteration :"<<iteration<<endl;
