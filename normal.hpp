@@ -209,6 +209,34 @@ class LSHADE{
                 Zakharov(DIM,i);
             }
         }
+        else if(F ==std::string("G"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Griewank(DIM,i);
+            }
+        }
+        else if(F ==std::string("SC"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                Schwefel(DIM,i);
+            }
+        }
+        else if(F ==std::string("SS"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                SUM_SQUARES(DIM,i);
+            }
+        }
+        else if(F ==std::string("P"))
+        {
+            for(int i=0;i<Particle.size();i++)
+            {
+                POWELL(DIM,i);
+            }
+        }
     }
     void pairsort(d1d a, d1d &b) 
     { 
@@ -654,14 +682,14 @@ class LSHADE{
         double Griewank_OBJECTIVE_VALUE(int DIM,d1d arr)
         {
             double sum1 = 0;
-            double sum2 = 0;
+            double sum2 = 1;
             for(int i=0;i<DIM;i++)
             {
                 sum1 += pow(arr[i],2);
-                sum2 *= cos( (arr[i]/sqrt(i)) );
+                sum2 *= cos( (arr[i]/sqrt(i+1)) );
 
             }
-            double F =  sum1/4000 - sum2 +1;
+            double F = 1 + sum1/4000 - sum2 ;
             return F;
         }
         void Griewank(int DIM,int index)
@@ -694,10 +722,12 @@ class LSHADE{
         double Schwefel_OBJECTIVE_VALUE(int DIM,d1d arr)
         {
             double sum1 = 0;
-            double sum2 = 0;
             for(int i=0;i<DIM;i++)
             {
-                sum1 += arr[i]*sin( sqrt(arr[i]) ) ;
+                double POS = arr[i];
+                if(POS < 0)
+                    POS = -POS;
+                sum1 += arr[i]*sin( sqrt(POS) ) ;
 
             }
             double F =  418.9829*DIM - sum1;
